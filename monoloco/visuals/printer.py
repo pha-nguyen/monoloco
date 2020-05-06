@@ -9,7 +9,7 @@ import matplotlib.cm as cm
 from matplotlib.patches import Ellipse, Circle, Rectangle
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from ..utils import pixel_to_camera, get_task_error
+from utils import pixel_to_camera, get_task_error
 
 
 class Printer:
@@ -151,7 +151,7 @@ class Printer:
                     self.draw_boxes(axes, idx, color)
 
                 if draw_text:
-                    self.draw_text_front(axes, uv, num)
+                    self.draw_text_front(axes, uv, dic_out['nums'][idx])
                     num += 1
 
         # Draw the bird figure
@@ -164,7 +164,7 @@ class Printer:
 
                 # Draw bird eye view text
                 if draw_text:
-                    self.draw_text_bird(axes, idx, num)
+                    self.draw_text_bird(axes, idx, dic_out['nums'][idx])
                     num += 1
         # Add the legend
         if legend:

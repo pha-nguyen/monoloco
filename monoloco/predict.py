@@ -4,17 +4,20 @@ import json
 
 import torch
 from PIL import Image
+from filterpy.kalman import KalmanFilter
 from openpifpaf import show
 
-from .visuals.printer import Printer
-from .network import PifPaf, ImageList, MonoLoco
-from .network.process import factory_for_gt, preprocess_pifpaf
-
+from visuals.printer import Printer
+from network import PifPaf, ImageList, MonoLoco
+from network.process import factory_for_gt, preprocess_pifpaf
+from bb_match import bb_match
+import numpy as np
 
 def predict(args):
 
     cnt = 0
-
+    trackers = []
+    prevs = []
     # load pifpaf and monoloco models
     pifpaf = PifPaf(args)
     monoloco = MonoLoco(model=args.model, device=args.device, n_dropout=args.n_dropout, p_dropout=args.dropout)
@@ -63,6 +66,44 @@ def predict(args):
                 boxes, keypoints = preprocess_pifpaf(pifpaf_out, im_size)
                 outputs, varss = monoloco.forward(keypoints, kk)
                 dic_out = monoloco.post_process(outputs, varss, boxes, keypoints, kk, dic_gt)
+                trks = [t.x.reshape(2, -1)[0] for t in trackers]
+                ctrs = [p for p in dic_out['xyz_pred']]
+                matches, unmatched_tracks, unmatched_detections = bb_match(trks, ctrs)
+                temp_nums = []
+                for t in trackers:
+                    if t.num not in prevs:
+                        t.predict()
+                prevs = []
+                for i, _ in enumerate(ctrs):
+                    if i in matches[:, 1]:
+                        m = matches[matches[:, 1].tolist().index(i)]
+                        trackers[m[0]].update(ctrs[m[1]])
+                        dic_out['xyz_pred'][m[1]] = trackers[m[0]].x.reshape(2, -1)[0]
+                        dic_out['xyz_real'][m[1]] = trackers[m[0]].x.reshape(2, -1)[0]
+                        temp_nums.append(trackers[m[0]].num)
+                    else:
+                        trackers.append(KalmanFilter(dim_x=6, dim_z=3))
+                        trackers[-1].F = np.array([[1,0,0,1,0,0],
+                                                [0,1,0,0,1,0],
+                                                [0,0,1,0,0,1],
+                                                [0,0,0,1,0,0],  
+                                                [0,0,0,0,1,0],
+                                                [0,0,0,0,0,1]])
+
+                        trackers[-1].H = np.array([[1,0,0,0,0,0],
+                                                [0,1,0,0,0,0],
+                                                [0,0,1,0,0,0]])
+
+                        # trackers[-1].P[3:,3:] *= 10. #state uncertainty, give high uncertainty to the unobservable initial velocities, covariance matrix
+                        # trackers[-1].P *= 10.
+                        trackers[-1].Q[3:,3:] *= 0.00001
+
+                        trackers[-1].x[:3] = np.array(ctrs[i]).reshape(3, 1)
+
+                        trackers[-1].num = len(trackers) - 1
+                        prevs.append(trackers[-1].num)
+                        temp_nums.append(trackers[-1].num)
+                dic_out['nums'] = temp_nums
 
             else:
                 dic_out = None

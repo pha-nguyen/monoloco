@@ -1,4 +1,4 @@
 
-from .pifpaf import PifPaf, ImageList
-from .losses import LaplacianLoss
-from .net import MonoLoco
+from network.pifpaf import PifPaf, ImageList
+from network.losses import LaplacianLoss
+from network.net import MonoLoco

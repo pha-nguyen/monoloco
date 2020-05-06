@@ -5,7 +5,7 @@ import numpy as np
 import torch
 import torchvision
 
-from ..utils import get_keypoints, pixel_to_camera
+from utils import get_keypoints, pixel_to_camera
 
 
 def preprocess_monoloco(keypoints, kk):

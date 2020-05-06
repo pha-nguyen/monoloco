@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 
-from ..utils import get_task_error, get_pixel_error
+from utils import get_task_error, get_pixel_error
 
 
 def show_results(dic_stats, show=False, save=False, stereo=False):

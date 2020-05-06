@@ -96,7 +96,7 @@ def main():
             from .visuals.webcam import webcam
             webcam(args)
         else:
-            from . import predict
+            import predict
             predict.predict(args)
 
     elif args.command == 'prep':

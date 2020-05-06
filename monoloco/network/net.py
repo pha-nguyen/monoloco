@@ -8,9 +8,9 @@ from collections import defaultdict
 
 import torch
 
-from ..utils import get_iou_matches, reorder_matches, get_keypoints, pixel_to_camera, xyz_from_distance
-from .process import preprocess_monoloco, unnormalize_bi, laplace_sampling
-from .architectures import LinearModel
+from utils import get_iou_matches, reorder_matches, get_keypoints, pixel_to_camera, xyz_from_distance
+from network.process import preprocess_monoloco, unnormalize_bi, laplace_sampling
+from network.architectures import LinearModel
 
 
 class MonoLoco:
